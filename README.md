@@ -22,6 +22,59 @@ This project performs a comprehensive diagnostic and economic opportunity sizing
 
 ---
 
+## Interactive Power BI Dashboards (3-Page Executive Suite)
+
+The portfolio includes a production-grade 3-page Power BI dashboard suite designed with Spotify's Dark Slate & Emerald executive aesthetic.
+
+### Page 1: Executive Listening Pulse (Macro Health)
+> **Target Audience:** VP of Product, Head of Core Experience, Executive Leadership  
+> **Key Focus:** 6 Core KPI Scorecards, Session Duration Buckets (<2m, 2–10m, 10–30m, 30m+), Commute Diurnal Rhythm, Platform Longevity Audit.
+
+![Page 1: Executive Listening Pulse](powerbi/page_1_executive_listening_pulse.png)
+
+---
+
+### Page 2: Skip-Friction & Shuffle Root-Cause Analysis (RCA)
+> **Target Audience:** Personalization ML Engineers, Recommendation PMs, Content Curators  
+> **Key Focus:** Context x Shuffle Early-Skip Matrix Heatmap, 3-Skip Rage-Quit Exit Funnel, Session Depth Decay Curve, First-Track Hook Survival Impact.
+
+![Page 2: Skip-Friction & Shuffle Root-Cause Analysis](powerbi/page_2_skip_friction_shuffle_rca.png)
+
+---
+
+### Page 3: Cohort Retention & Discovery Levers (Strategic Growth)
+> **Target Audience:** Growth Product Managers, Subscriber Retention Leads, Strategy Teams  
+> **Key Focus:** Free vs. Premium Weekly Cohort Retention (W0–W4), Radio-to-Library Replay Conversion Funnel, Genre Affinity Quadrant, Interactive What-If Simulation (+5% to +20% Recovery).
+
+![Page 3: Cohort Retention & Discovery Levers](powerbi/page_3_cohort_retention_discovery_levers.png)
+
+---
+
+## How to Build & Use the Power BI Suite (Step-by-Step Guide)
+
+You can reproduce or inspect the dashboards in **Power BI Desktop** in under 5 minutes:
+
+### Step 1: Ingest Data
+1. Open **Power BI Desktop** and select **Get Data -> Text/CSV**.
+2. Browse to [`data/spotify_streams.csv`](data/spotify_streams.csv) and click **Load**.
+3. Verify data types: `event_timestamp` as Datetime, `ms_played` and `track_duration_ms` as Whole Number, `skipped` and `shuffle` as Whole Number (0/1).
+
+### Step 2: Apply the Executive Theme
+1. In the top ribbon, navigate to **View -> Themes dropdown -> Browse for themes**.
+2. Select [`powerbi/theme.json`](powerbi/theme.json).
+3. Power BI will instantly apply the dark canvas (`#121212`), emerald callout cards (`#1DB954`), and custom visual border radii.
+
+### Step 3: Import DAX Measures
+1. Open [`powerbi/dax_measures.txt`](powerbi/dax_measures.txt).
+2. Right-click the `spotify_streams` table in the Fields pane -> **New Measure**.
+3. Copy-paste the pre-built DAX measures (organized into 8 modular sections: Executive KPIs, Duration, Subscription Tiers, Context Diagnostics, Survival Analysis, Duration Bucketing, WoW Deltas, and What-If Parameters).
+
+### Step 4: Assemble Visuals Using the Blueprint
+1. Follow [`powerbi/dashboard_blueprint.md`](powerbi/dashboard_blueprint.md) for exact visual coordinates, axis configurations, legend bindings, and drill-through targets across Page 1, Page 2, and Page 3.
+2. Add a What-If parameter table `WhatIf_Duration_Uplift` (Values: 0.05 to 0.20, step 0.05) to activate the interactive duration recovery calculator on Page 3.
+
+---
+
 ## Metric Hierarchy & Metric Tree
 
 ```mermaid
@@ -138,6 +191,13 @@ D:\2 Portfolio\5 Spotify\
 │   └── spotify_streams.csv             # 100,000 sessions | 325,164 stream interaction events
 ├── excel\
 │   └── Spotify_Engagement_Analysis_Model.xlsx # 5-tab dynamic model built with openpyxl
+├── powerbi\
+│   ├── page_1_executive_listening_pulse.png   # Full 1920x1080 screenshot of Page 1
+│   ├── page_2_skip_friction_shuffle_rca.png   # Full 1920x1080 screenshot of Page 2
+│   ├── page_3_cohort_retention_discovery_levers.png # Full 1920x1080 screenshot of Page 3
+│   ├── theme.json                            # Spotify Executive Dark & Emerald Power BI theme
+│   ├── dax_measures.txt                      # 25+ production DAX measures formatted with comments
+│   └── dashboard_blueprint.md                # 3-page comprehensive dashboard wireframe & layout
 ├── sql\
 │   ├── 01_executive_engagement_kpis.sql      # 8 KPIs across overall, Free, & Premium
 │   ├── 02_session_duration_buckets.sql       # <2m, 2-10m, 10-30m, 30m+ session segmentation
@@ -158,10 +218,6 @@ D:\2 Portfolio\5 Spotify\
 │   ├── 17_reason_end_exit_taxonomy.sql       # Session exit mechanism taxonomy
 │   ├── 18_opportunity_sizing_simulation.sql  # Financial & listening hour uplift model
 │   └── query_results.md                      # Complete audit report with all 18 executed outputs
-├── powerbi\
-│   ├── theme.json                            # Spotify Executive Dark & Emerald Power BI theme
-│   ├── dax_measures.txt                      # 25+ production DAX measures formatted with comments
-│   └── dashboard_blueprint.md                # 3-page comprehensive dashboard wireframe & layout
 ├── .gitignore                                # Clean version control exclusions
 └── README.md                                 # Portfolio documentation & executive summary
 ```
