@@ -1,0 +1,350 @@
+/*
+========================================================================================
+SPOTIFY LISTENING BEHAVIOUR & SKIP-FRICTION ANALYSIS
+POWER BI DAX MEASURES LIBRARY
+========================================================================================
+Scope: 100,000 Listening Sessions | 325,164 Stream Events | 12,000 Active Listeners
+Dataset Table Name: `spotify_streams`
+Calendar Table Name: `Dim_Date` (Generated via CALENDARAUTO())
+Author: Product & Business Analyst Portfolio
+========================================================================================
+*/
+
+// =====================================================================================
+// SECTION 1: THE 8 DEFINED EXECUTIVE ENGAGEMENT KPIS
+// =====================================================================================
+
+// KPI 1: Total Sessions
+Total Sessions = 
+DISTINCTCOUNT(spotify_streams[session_id])
+
+// KPI 2: Total Streams
+Total Streams = 
+COUNTROWS(spotify_streams)
+
+// KPI 3: Active Listeners
+Active Listeners = 
+DISTINCTCOUNT(spotify_streams[user_id])
+
+// KPI 4: Overall Skip Rate %
+Overall Skip Rate % = 
+VAR TotalEvents = COUNTROWS(spotify_streams)
+VAR SkippedEvents = CALCULATE(COUNTROWS(spotify_streams), spotify_streams[skipped] = 1)
+RETURN
+    DIVIDE(SkippedEvents, TotalEvents, 0)
+
+// KPI 5: Early-Skip Rate (<30s) %
+Early-Skip Rate (<30s) % = 
+VAR TotalEvents = COUNTROWS(spotify_streams)
+VAR EarlySkips = 
+    CALCULATE(
+        COUNTROWS(spotify_streams),
+        spotify_streams[skipped] = 1,
+        spotify_streams[ms_played] < 30000
+    )
+RETURN
+    DIVIDE(EarlySkips, TotalEvents, 0)
+
+// KPI 6: Track Completion Rate %
+Track Completion Rate % = 
+VAR TotalEvents = COUNTROWS(spotify_streams)
+VAR CompletedEvents = 
+    CALCULATE(
+        COUNTROWS(spotify_streams),
+        spotify_streams[skipped] = 0
+    )
+RETURN
+    DIVIDE(CompletedEvents, TotalEvents, 0)
+
+// KPI 7: Avg Session Duration (Mins)
+Avg Session Duration (Mins) = 
+VAR TotalPlayMinutes = DIVIDE(SUM(spotify_streams[ms_played]), 60000, 0)
+VAR DistinctSessions = DISTINCTCOUNT(spotify_streams[session_id])
+RETURN
+    DIVIDE(TotalPlayMinutes, DistinctSessions, 0)
+
+// KPI 8: 3-Skip Abandonment Rate %
+3-Skip Abandonment Rate % = 
+VAR AbandonedSessions = 
+    CALCULATE(
+        DISTINCTCOUNT(spotify_streams[session_id]),
+        FILTER(
+            spotify_streams,
+            spotify_streams[skipped] = 1 &&
+            (spotify_streams[reason_end] = "endplay" || spotify_streams[reason_end] = "logout") &&
+            spotify_streams[track_position_in_session] >= 3
+        )
+    )
+VAR AllSessions = DISTINCTCOUNT(spotify_streams[session_id])
+RETURN
+    DIVIDE(AbandonedSessions, AllSessions, 0)
+
+
+// =====================================================================================
+// SECTION 2: VOLUME & STREAMING DURATION MEASURES
+// =====================================================================================
+
+// Total Listening Time in Minutes
+Total Listening Minutes = 
+DIVIDE(SUM(spotify_streams[ms_played]), 60000, 0)
+
+// Total Listening Time in Hours
+Total Listening Hours = 
+DIVIDE(SUM(spotify_streams[ms_played]), 3600000, 0)
+
+// Average Minutes Streamed per Event
+Avg Stream Duration (Mins) = 
+DIVIDE(DIVIDE(SUM(spotify_streams[ms_played]), 60000, 0), COUNTROWS(spotify_streams), 0)
+
+// Streams per Active Listener
+Streams per Listener = 
+DIVIDE([Total Streams], [Active Listeners], 0)
+
+// Sessions per Active Listener
+Sessions per Listener = 
+DIVIDE([Total Sessions], [Active Listeners], 0)
+
+// Average Tracks Streamed per Session
+Avg Tracks per Session = 
+DIVIDE([Total Streams], [Total Sessions], 0)
+
+
+// =====================================================================================
+// SECTION 3: SUBSCRIPTION TIER SEGMENTATION MEASURES
+// =====================================================================================
+
+// Free Tier Sessions
+Free Tier Sessions = 
+CALCULATE([Total Sessions], spotify_streams[subscription_tier] = "Free")
+
+// Premium Tier Sessions
+Premium Tier Sessions = 
+CALCULATE([Total Sessions], spotify_streams[subscription_tier] = "Premium")
+
+// Free Tier Skip Rate %
+Free Tier Skip Rate % = 
+CALCULATE([Overall Skip Rate %], spotify_streams[subscription_tier] = "Free")
+
+// Premium Tier Skip Rate %
+Premium Tier Skip Rate % = 
+CALCULATE([Overall Skip Rate %], spotify_streams[subscription_tier] = "Premium")
+
+// Tier Skip Rate Delta (Free - Premium)
+Tier Skip Rate Gap % = 
+[Free Tier Skip Rate %] - [Premium Tier Skip Rate %]
+
+// Free Tier Avg Session Duration (Mins)
+Free Tier Avg Duration (Mins) = 
+CALCULATE([Avg Session Duration (Mins)], spotify_streams[subscription_tier] = "Free")
+
+// Premium Tier Avg Session Duration (Mins)
+Premium Tier Avg Duration (Mins) = 
+CALCULATE([Avg Session Duration (Mins)], spotify_streams[subscription_tier] = "Premium")
+
+
+// =====================================================================================
+// SECTION 4: CONTEXT & SHUFFLE DIAGNOSTICS
+// =====================================================================================
+
+// Shuffle Streams Share %
+Shuffle Streams Share % = 
+VAR ShuffleStreams = CALCULATE([Total Streams], spotify_streams[shuffle] = 1)
+RETURN
+    DIVIDE(ShuffleStreams, [Total Streams], 0)
+
+// Algorithmic Radio Streams
+Algorithmic Radio Streams = 
+CALCULATE([Total Streams], spotify_streams[context_type] = "Algorithmic_Radio")
+
+// User Library Streams
+User Library Streams = 
+CALCULATE([Total Streams], spotify_streams[context_type] = "User_Library")
+
+// Editorial Playlist Streams
+Editorial Playlist Streams = 
+CALCULATE([Total Streams], spotify_streams[context_type] = "Editorial_Playlist")
+
+// Search Context Streams
+Search Context Streams = 
+CALCULATE([Total Streams], spotify_streams[context_type] = "Search")
+
+// Algorithmic Radio Early-Skip Rate %
+Algo Radio Early-Skip % = 
+CALCULATE([Early-Skip Rate (<30s) %], spotify_streams[context_type] = "Algorithmic_Radio")
+
+// User Library Early-Skip Rate %
+Library Early-Skip % = 
+CALCULATE([Early-Skip Rate (<30s) %], spotify_streams[context_type] = "User_Library")
+
+// Algorithmic Radio Shuffle Early-Skip Hazard Ratio
+Algo Shuffle Early-Skip Hazard Ratio = 
+VAR AlgoShuffleEarlySkip = 
+    CALCULATE(
+        [Early-Skip Rate (<30s) %], 
+        spotify_streams[context_type] = "Algorithmic_Radio", 
+        spotify_streams[shuffle] = 1
+    )
+VAR LibraryEarlySkip = [Library Early-Skip %]
+RETURN
+    DIVIDE(AlgoShuffleEarlySkip, LibraryEarlySkip, 0)
+
+
+// =====================================================================================
+// SECTION 5: FIRST-TRACK HOOK & SURVIVAL ANALYSIS
+// =====================================================================================
+
+// Track 1 Bounce Rate (Sessions with only 1 stream)
+Track 1 Bounce Rate % = 
+VAR SingleTrackSessions = 
+    COUNTROWS(
+        FILTER(
+            SUMMARIZE(
+                spotify_streams,
+                spotify_streams[session_id],
+                "TrackCount", COUNTROWS(spotify_streams)
+            ),
+            [TrackCount] = 1
+        )
+    )
+RETURN
+    DIVIDE(SingleTrackSessions, [Total Sessions], 0)
+
+// Avg Duration when Track 1 is Completed
+Avg Duration When Track 1 Completed (Mins) = 
+CALCULATE(
+    [Avg Session Duration (Mins)],
+    FILTER(
+        spotify_streams,
+        spotify_streams[track_position_in_session] = 1 &&
+        spotify_streams[skipped] = 0
+    )
+)
+
+// Avg Duration when Track 1 is Early Skipped
+Avg Duration When Track 1 Early Skipped (Mins) = 
+CALCULATE(
+    [Avg Session Duration (Mins)],
+    FILTER(
+        spotify_streams,
+        spotify_streams[track_position_in_session] = 1 &&
+        spotify_streams[skipped] = 1 &&
+        spotify_streams[ms_played] < 30000
+    )
+)
+
+
+// =====================================================================================
+// SECTION 6: SESSION DURATION BUCKETING MEASURES
+// =====================================================================================
+
+// Share of Sessions < 2 Mins
+Share Sessions Under 2 Mins % = 
+VAR MicroSessions = 
+    COUNTROWS(
+        FILTER(
+            SUMMARIZE(
+                spotify_streams,
+                spotify_streams[session_id],
+                "DurMins", DIVIDE(SUM(spotify_streams[ms_played]), 60000, 0)
+            ),
+            [DurMins] < 2.0
+        )
+    )
+RETURN
+    DIVIDE(MicroSessions, [Total Sessions], 0)
+
+// Share of Sessions 2–10 Mins
+Share Sessions 2 to 10 Mins % = 
+VAR ShortSessions = 
+    COUNTROWS(
+        FILTER(
+            SUMMARIZE(
+                spotify_streams,
+                spotify_streams[session_id],
+                "DurMins", DIVIDE(SUM(spotify_streams[ms_played]), 60000, 0)
+            ),
+            [DurMins] >= 2.0 && [DurMins] <= 10.0
+        )
+    )
+RETURN
+    DIVIDE(ShortSessions, [Total Sessions], 0)
+
+// Share of Sessions 10–30 Mins
+Share Sessions 10 to 30 Mins % = 
+VAR StandardSessions = 
+    COUNTROWS(
+        FILTER(
+            SUMMARIZE(
+                spotify_streams,
+                spotify_streams[session_id],
+                "DurMins", DIVIDE(SUM(spotify_streams[ms_played]), 60000, 0)
+            ),
+            [DurMins] > 10.0 && [DurMins] <= 30.0
+        )
+    )
+RETURN
+    DIVIDE(StandardSessions, [Total Sessions], 0)
+
+// Share of Sessions 30+ Mins
+Share Sessions 30+ Mins % = 
+VAR DeepSessions = 
+    COUNTROWS(
+        FILTER(
+            SUMMARIZE(
+                spotify_streams,
+                spotify_streams[session_id],
+                "DurMins", DIVIDE(SUM(spotify_streams[ms_played]), 60000, 0)
+            ),
+            [DurMins] > 30.0
+        )
+    )
+RETURN
+    DIVIDE(DeepSessions, [Total Sessions], 0)
+
+
+// =====================================================================================
+// SECTION 7: TIME INTELLIGENCE & DELTAS (WoW)
+// =====================================================================================
+
+// Previous Week Streams
+Streams Prev Week = 
+CALCULATE([Total Streams], DATEADD(Dim_Date[Date], -7, DAY))
+
+// Week-over-Week (WoW) Stream Growth %
+WoW Stream Growth % = 
+VAR CurrentStreams = [Total Streams]
+VAR PriorStreams = [Streams Prev Week]
+RETURN
+    DIVIDE(CurrentStreams - PriorStreams, PriorStreams, 0)
+
+// Previous Week Skip Rate %
+Skip Rate % Prev Week = 
+CALCULATE([Overall Skip Rate %], DATEADD(Dim_Date[Date], -7, DAY))
+
+// Week-over-Week Skip Rate Delta (Basis Points / Percentage Points)
+WoW Skip Rate Delta = 
+[Overall Skip Rate %] - [Skip Rate % Prev Week]
+
+
+// =====================================================================================
+// SECTION 8: WHAT-IF OPPORTUNITY SIZING MEASURES
+// =====================================================================================
+
+// Parameter: Selected Mitigation Target % (from What-If Slider: 0.05 to 0.20)
+Selected Mitigation Uplift % = 
+SELECTEDVALUE('WhatIf_Duration_Uplift'[UpliftValue], 0.15)
+
+// Projected Recovered Listening Hours
+Projected Recovered Monthly Hours = 
+VAR CurrentRadioHours = CALCULATE([Total Listening Hours], spotify_streams[context_type] = "Algorithmic_Radio")
+VAR TargetUplift = [Selected Mitigation Uplift %]
+RETURN
+    CurrentRadioHours * TargetUplift
+
+// Projected Free Ad Impression Gain (14 impressions / hour)
+Projected Ad Impressions Gain = 
+[Projected Recovered Monthly Hours] * 14 * 0.55
+
+// Projected Monthly Ad Revenue Uplift ($0.004 effective CPM per ad impression)
+Projected Monthly Ad Revenue ($) = 
+[Projected Ad Impressions Gain] * 0.004

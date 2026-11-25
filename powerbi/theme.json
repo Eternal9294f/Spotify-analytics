@@ -1,0 +1,143 @@
+{
+  "name": "Spotify Executive Dark & Emerald",
+  "dataColors": [
+    "#1DB954",
+    "#2E77D0",
+    "#F59B23",
+    "#E22134",
+    "#1ED760",
+    "#9B51E0",
+    "#00D2D3",
+    "#FFA801",
+    "#54A0FF",
+    "#5F27CD"
+  ],
+  "background": "#121212",
+  "foreground": "#FFFFFF",
+  "tableAccent": "#1DB954",
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#181818"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "border": [
+          {
+            "color": {
+              "solid": {
+                "color": "#282828"
+              }
+            },
+            "radius": 8,
+            "show": true,
+            "width": 1
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "title": [
+          {
+            "fontColor": {
+              "solid": {
+                "color": "#FFFFFF"
+              }
+            },
+            "fontFamily": "Segoe UI",
+            "fontSize": 12,
+            "show": true
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#121212"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#0A0A0A"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "card": {
+      "*": {
+        "labels": [
+          {
+            "color": {
+              "solid": {
+                "color": "#1DB954"
+              }
+            },
+            "fontFamily": "Segoe UI Semibold",
+            "fontSize": 24
+          }
+        ],
+        "categoryLabels": [
+          {
+            "color": {
+              "solid": {
+                "color": "#B3B3B3"
+              }
+            },
+            "fontFamily": "Segoe UI",
+            "fontSize": 10
+          }
+        ]
+      }
+    },
+    "slicer": {
+      "*": {
+        "header": [
+          {
+            "fontColor": {
+              "solid": {
+                "color": "#FFFFFF"
+              }
+            },
+            "fontFamily": "Segoe UI Semibold",
+            "textSize": 10
+          }
+        ],
+        "items": [
+          {
+            "background": {
+              "solid": {
+                "color": "#282828"
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": "#FFFFFF"
+              }
+            },
+            "fontFamily": "Segoe UI",
+            "textSize": 9
+          }
+        ]
+      }
+    }
+  }
+}

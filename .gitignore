@@ -1,0 +1,21 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.py
+
+# Environment & temporary files
+.env
+.venv
+env/
+venv/
+*.tmp
+*.log
+
+# Office temporary lock files
+~$*.xlsx
+~$*.docx
+
+# OS specific files
+.DS_Store
+Thumbs.db
